@@ -59,6 +59,11 @@ This repo now includes two new invoke commands:
 2. Android Settings → Accessibility → enable **OpenClaw Accessibility Service**.
 3. Keep OpenClaw connected to the gateway.
 
+### Android 11+ package visibility note
+
+`app.launch` relies on `PackageManager.getLaunchIntentForPackage()`.  
+This repo now declares a launcher-intent `<queries>` block in `AndroidManifest.xml` so launcher apps can be resolved on Android 11+.
+
 ### Example invoke payloads
 
 ```json
