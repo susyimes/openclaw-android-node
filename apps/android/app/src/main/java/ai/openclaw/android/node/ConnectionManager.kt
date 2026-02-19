@@ -11,6 +11,7 @@ import ai.openclaw.android.protocol.OpenClawCanvasA2UICommand
 import ai.openclaw.android.protocol.OpenClawCanvasCommand
 import ai.openclaw.android.protocol.OpenClawCameraCommand
 import ai.openclaw.android.protocol.OpenClawLocationCommand
+import ai.openclaw.android.protocol.OpenClawControlCommand
 import ai.openclaw.android.protocol.OpenClawScreenCommand
 import ai.openclaw.android.protocol.OpenClawSmsCommand
 import ai.openclaw.android.protocol.OpenClawCapability
@@ -90,6 +91,8 @@ class ConnectionManager(
       add(OpenClawCanvasA2UICommand.PushJSONL.rawValue)
       add(OpenClawCanvasA2UICommand.Reset.rawValue)
       add(OpenClawScreenCommand.Record.rawValue)
+      add(OpenClawControlCommand.AppLaunch.rawValue)
+      add(OpenClawControlCommand.ScreenTap.rawValue)
       if (cameraEnabled()) {
         add(OpenClawCameraCommand.Snap.rawValue)
         add(OpenClawCameraCommand.Clip.rawValue)

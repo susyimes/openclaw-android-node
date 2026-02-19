@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">OpenClaw Node</string>
+    <string name="accessibility_service_summary">Open apps and perform tap gestures for OpenClaw commands</string>
+    <string name="accessibility_service_description">Allows OpenClaw to launch apps and tap on screen coordinates when requested from your paired gateway.</string>
 </resources>

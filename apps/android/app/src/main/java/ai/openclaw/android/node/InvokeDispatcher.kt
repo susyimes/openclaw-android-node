@@ -5,6 +5,7 @@ import ai.openclaw.android.protocol.OpenClawCanvasA2UICommand
 import ai.openclaw.android.protocol.OpenClawCanvasCommand
 import ai.openclaw.android.protocol.OpenClawCameraCommand
 import ai.openclaw.android.protocol.OpenClawLocationCommand
+import ai.openclaw.android.protocol.OpenClawControlCommand
 import ai.openclaw.android.protocol.OpenClawScreenCommand
 import ai.openclaw.android.protocol.OpenClawSmsCommand
 
@@ -14,6 +15,7 @@ class InvokeDispatcher(
   private val locationHandler: LocationHandler,
   private val screenHandler: ScreenHandler,
   private val smsHandler: SmsHandler,
+  private val appControlHandler: AppControlHandler,
   private val a2uiHandler: A2UIHandler,
   private val debugHandler: DebugHandler,
   private val appUpdateHandler: AppUpdateHandler,
@@ -158,6 +160,24 @@ class InvokeDispatcher(
 
       // SMS command
       OpenClawSmsCommand.Send.rawValue -> smsHandler.handleSmsSend(paramsJson)
+
+      // App control commands
+      OpenClawControlCommand.AppLaunch.rawValue -> {
+        val res = appControlHandler.handleAppLaunch(paramsJson)
+        if (res.errorCode != null) {
+          GatewaySession.InvokeResult.error(code = res.errorCode, message = res.errorMessage ?: res.errorCode)
+        } else {
+          GatewaySession.InvokeResult.ok(res.okPayloadJson)
+        }
+      }
+      OpenClawControlCommand.ScreenTap.rawValue -> {
+        val res = appControlHandler.handleScreenTap(paramsJson)
+        if (res.errorCode != null) {
+          GatewaySession.InvokeResult.error(code = res.errorCode, message = res.errorMessage ?: res.errorCode)
+        } else {
+          GatewaySession.InvokeResult.ok(res.okPayloadJson)
+        }
+      }
 
       // Debug commands
       "debug.ed25519" -> debugHandler.handleEd25519()

@@ -45,3 +45,26 @@ cd apps/android
 ```properties
 sdk.dir=C:\\Users\\<you>\\AppData\\Local\\Android\\Sdk
 ```
+
+## New node commands (Accessibility route)
+
+This repo now includes two new invoke commands:
+
+- `app.launch` — launch an Android app by package name
+- `screen.tap` — tap a screen coordinate via Android AccessibilityService gesture API
+
+### Required setup on phone
+
+1. Install/open the APK.
+2. Android Settings → Accessibility → enable **OpenClaw Accessibility Service**.
+3. Keep OpenClaw connected to the gateway.
+
+### Example invoke payloads
+
+```json
+{"packageName":"com.tencent.mm"}
+```
+
+```json
+{"x":540,"y":1800}
+```

@@ -134,6 +134,11 @@ class NodeRuntime(context: Context) {
     sms = sms,
   )
 
+  private val appControlHandler: AppControlHandler = AppControlHandler(
+    appContext = appContext,
+    json = json,
+  )
+
   private val a2uiHandler: A2UIHandler = A2UIHandler(
     canvas = canvas,
     json = json,
@@ -157,6 +162,7 @@ class NodeRuntime(context: Context) {
     locationHandler = locationHandler,
     screenHandler = screenHandler,
     smsHandler = smsHandlerImpl,
+    appControlHandler = appControlHandler,
     a2uiHandler = a2uiHandler,
     debugHandler = debugHandler,
     appUpdateHandler = appUpdateHandler,
