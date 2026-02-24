@@ -29,7 +29,7 @@ class InvokeDispatcher(
       command.startsWith(OpenClawCanvasCommand.NamespacePrefix) ||
         command.startsWith(OpenClawCanvasA2UICommand.NamespacePrefix) ||
         command.startsWith(OpenClawCameraCommand.NamespacePrefix) ||
-        command.startsWith(OpenClawScreenCommand.NamespacePrefix)
+        command == OpenClawScreenCommand.Record.rawValue
     ) {
       if (!isForeground()) {
         return GatewaySession.InvokeResult.error(
