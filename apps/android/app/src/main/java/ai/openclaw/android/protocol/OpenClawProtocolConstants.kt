@@ -73,6 +73,8 @@ enum class OpenClawLocationCommand(val rawValue: String) {
 enum class OpenClawControlCommand(val rawValue: String) {
   AppLaunch("app.launch"),
   ScreenTap("screen.tap"),
+  TextInput("text.input"),
+  ImePaste("ime.paste"),
   ;
 
   companion object {

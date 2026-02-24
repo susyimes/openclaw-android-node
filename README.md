@@ -48,10 +48,12 @@ sdk.dir=C:\\Users\\<you>\\AppData\\Local\\Android\\Sdk
 
 ## New node commands (Accessibility route)
 
-This repo now includes two new invoke commands:
+This repo now includes four accessibility-route invoke commands:
 
 - `app.launch` — launch an Android app by package name
 - `screen.tap` — tap a screen coordinate via Android AccessibilityService gesture API
+- `text.input` — set text into the currently focused editable field
+- `ime.paste` — paste provided text into the focused editable field
 
 ### Required setup on phone
 
@@ -72,4 +74,8 @@ This repo now declares a launcher-intent `<queries>` block in `AndroidManifest.x
 
 ```json
 {"x":540,"y":1800}
+```
+
+```json
+{"text":"咖喱"}
 ```

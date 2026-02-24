@@ -93,6 +93,74 @@ class AppControlHandler(
     )
   }
 
+  suspend fun handleTextInput(paramsJson: String?): Result {
+    val payload = parseObject(paramsJson)
+    val text = payload?.get("text").asStringOrNull()?.takeIf { it.isNotEmpty() }
+
+    if (text == null) {
+      return Result.error(
+        code = "INVALID_REQUEST",
+        message = "INVALID_REQUEST: text required",
+      )
+    }
+
+    if (!OpenClawAccessibilityService.isActive()) {
+      return Result.error(
+        code = "ACCESSIBILITY_DISABLED",
+        message = "ACCESSIBILITY_DISABLED: enable OpenClaw Accessibility service in Android settings",
+      )
+    }
+
+    val ok = OpenClawAccessibilityService.setText(text)
+    if (!ok) {
+      return Result.error(
+        code = "TEXT_INPUT_FAILED",
+        message = "TEXT_INPUT_FAILED: no focused editable field or action failed",
+      )
+    }
+
+    return Result.ok(
+      buildJsonObject {
+        put("ok", JsonPrimitive(true))
+        put("textLength", JsonPrimitive(text.length))
+      }.toString(),
+    )
+  }
+
+  suspend fun handleImePaste(paramsJson: String?): Result {
+    val payload = parseObject(paramsJson)
+    val text = payload?.get("text").asStringOrNull()?.takeIf { it.isNotEmpty() }
+
+    if (text == null) {
+      return Result.error(
+        code = "INVALID_REQUEST",
+        message = "INVALID_REQUEST: text required",
+      )
+    }
+
+    if (!OpenClawAccessibilityService.isActive()) {
+      return Result.error(
+        code = "ACCESSIBILITY_DISABLED",
+        message = "ACCESSIBILITY_DISABLED: enable OpenClaw Accessibility service in Android settings",
+      )
+    }
+
+    val ok = OpenClawAccessibilityService.pasteText(text)
+    if (!ok) {
+      return Result.error(
+        code = "IME_PASTE_FAILED",
+        message = "IME_PASTE_FAILED: failed to paste into focused field",
+      )
+    }
+
+    return Result.ok(
+      buildJsonObject {
+        put("ok", JsonPrimitive(true))
+        put("textLength", JsonPrimitive(text.length))
+      }.toString(),
+    )
+  }
+
   private fun parseObject(paramsJson: String?): JsonObject? {
     val trimmed = paramsJson?.trim().orEmpty()
     if (trimmed.isEmpty() || trimmed == "{}") return null

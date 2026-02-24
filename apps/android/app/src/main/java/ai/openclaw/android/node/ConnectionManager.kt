@@ -93,6 +93,8 @@ class ConnectionManager(
       add(OpenClawScreenCommand.Record.rawValue)
       add(OpenClawControlCommand.AppLaunch.rawValue)
       add(OpenClawControlCommand.ScreenTap.rawValue)
+      add(OpenClawControlCommand.TextInput.rawValue)
+      add(OpenClawControlCommand.ImePaste.rawValue)
       add("debug.ping.susu.20260224")
       if (cameraEnabled()) {
         add(OpenClawCameraCommand.Snap.rawValue)

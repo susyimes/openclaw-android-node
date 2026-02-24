@@ -178,6 +178,22 @@ class InvokeDispatcher(
           GatewaySession.InvokeResult.ok(res.okPayloadJson)
         }
       }
+      OpenClawControlCommand.TextInput.rawValue -> {
+        val res = appControlHandler.handleTextInput(paramsJson)
+        if (res.errorCode != null) {
+          GatewaySession.InvokeResult.error(code = res.errorCode, message = res.errorMessage ?: res.errorCode)
+        } else {
+          GatewaySession.InvokeResult.ok(res.okPayloadJson)
+        }
+      }
+      OpenClawControlCommand.ImePaste.rawValue -> {
+        val res = appControlHandler.handleImePaste(paramsJson)
+        if (res.errorCode != null) {
+          GatewaySession.InvokeResult.error(code = res.errorCode, message = res.errorMessage ?: res.errorCode)
+        } else {
+          GatewaySession.InvokeResult.ok(res.okPayloadJson)
+        }
+      }
 
       // Debug commands
       "debug.ed25519" -> debugHandler.handleEd25519()
