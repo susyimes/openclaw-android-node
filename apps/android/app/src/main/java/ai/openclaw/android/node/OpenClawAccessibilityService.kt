@@ -6,6 +6,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Path
+import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
 import android.view.accessibility.AccessibilityEvent
@@ -16,6 +17,22 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 
 class OpenClawAccessibilityService : AccessibilityService() {
+  data class UiNodeDump(
+    val path: String,
+    val text: String?,
+    val contentDescription: String?,
+    val hint: String?,
+    val viewId: String?,
+    val bounds: String,
+    val centerX: Int,
+    val centerY: Int,
+    val clickable: Boolean,
+    val editable: Boolean,
+    val focusable: Boolean,
+    val focused: Boolean,
+    val enabled: Boolean,
+  )
+
   companion object {
     private val instanceRef = AtomicReference<OpenClawAccessibilityService?>(null)
 
@@ -35,6 +52,23 @@ class OpenClawAccessibilityService : AccessibilityService() {
       val service = instanceRef.get() ?: return false
       return service.performPasteInternal(text = text, targetQuery = targetQuery)
     }
+
+    fun snapshot(maxNodes: Int = 300): List<UiNodeDump> {
+      val service = instanceRef.get() ?: return emptyList()
+      return service.collectSnapshot(maxNodes)
+    }
+
+    fun findNode(query: String): UiNodeDump? {
+      val service = instanceRef.get() ?: return null
+      return service.findBestNodeByQuery(query)
+    }
+
+    fun click(path: String? = null, query: String? = null): Boolean {
+      val service = instanceRef.get() ?: return false
+      return service.clickNode(path = path, query = query)
+    }
+
+    fun exists(query: String): Boolean = findNode(query) != null
   }
 
   override fun onServiceConnected() {
@@ -110,13 +144,11 @@ class OpenClawAccessibilityService : AccessibilityService() {
 
     val root = rootInActiveWindow ?: return null
 
-    // 1) Existing focused editable wins.
     val focused = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
     if (focused?.isEditable == true) return focused
 
-    // 2) If query provided, find relevant node and click/focus it first.
     if (query != null) {
-      val matched = findNodeByQuery(root, query)
+      val matched = findNodeInfoByQuery(root, query)
       if (matched != null) {
         if (matched.isEditable) {
           matched.performAction(AccessibilityNodeInfo.ACTION_FOCUS)
@@ -124,20 +156,104 @@ class OpenClawAccessibilityService : AccessibilityService() {
           return matched
         }
 
-        // Click match or a clickable ancestor, then re-resolve focused editable.
         clickNodeOrAncestor(matched)
         val refreshed = rootInActiveWindow
         val refreshedFocused = refreshed?.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
         if (refreshedFocused?.isEditable == true) return refreshedFocused
 
-        // If matched subtree contains editable, use it.
         val inSubtree = findFirstEditable(matched)
         if (inSubtree != null) return inSubtree
       }
     }
 
-    // 3) Fallback: first editable in tree.
     return findFirstEditable(root)
+  }
+
+  private fun collectSnapshot(maxNodes: Int): List<UiNodeDump> {
+    val root = rootInActiveWindow ?: return emptyList()
+    val out = mutableListOf<UiNodeDump>()
+    val queue = ArrayDeque<Pair<AccessibilityNodeInfo, String>>()
+    queue.add(root to "r")
+
+    while (queue.isNotEmpty() && out.size < maxNodes.coerceAtLeast(1)) {
+      val (node, path) = queue.removeFirst()
+      out += nodeToDump(node, path)
+      for (i in 0 until node.childCount) {
+        val child = node.getChild(i) ?: continue
+        queue.add(child to "$path/$i")
+      }
+    }
+    return out
+  }
+
+  private fun findBestNodeByQuery(query: String): UiNodeDump? {
+    val root = rootInActiveWindow ?: return null
+    val q = query.trim().lowercase()
+    if (q.isEmpty()) return null
+
+    val queue = ArrayDeque<Pair<AccessibilityNodeInfo, String>>()
+    queue.add(root to "r")
+    var best: Pair<Int, UiNodeDump>? = null
+
+    while (queue.isNotEmpty()) {
+      val (node, path) = queue.removeFirst()
+      val score = scoreNode(node, q)
+      if (score > 0) {
+        val dump = nodeToDump(node, path)
+        if (best == null || score > best!!.first) best = score to dump
+      }
+      for (i in 0 until node.childCount) {
+        val child = node.getChild(i) ?: continue
+        queue.add(child to "$path/$i")
+      }
+    }
+
+    return best?.second
+  }
+
+  private fun clickNode(path: String? = null, query: String? = null): Boolean {
+    val root = rootInActiveWindow ?: return false
+
+    val target =
+      when {
+        !path.isNullOrBlank() -> resolvePath(root, path)
+        !query.isNullOrBlank() -> findNodeInfoByQuery(root, query)
+        else -> null
+      } ?: return false
+
+    return clickNodeOrAncestor(target)
+  }
+
+  private fun resolvePath(root: AccessibilityNodeInfo, path: String): AccessibilityNodeInfo? {
+    val normalized = path.trim()
+    if (normalized.isEmpty() || normalized == "r") return root
+    val parts = normalized.removePrefix("r/").split('/').filter { it.isNotEmpty() }
+    var current: AccessibilityNodeInfo? = root
+    for (p in parts) {
+      val idx = p.toIntOrNull() ?: return null
+      current = current?.getChild(idx) ?: return null
+    }
+    return current
+  }
+
+  private fun nodeToDump(node: AccessibilityNodeInfo, path: String): UiNodeDump {
+    val rect = Rect()
+    node.getBoundsInScreen(rect)
+    return UiNodeDump(
+      path = path,
+      text = node.text?.toString(),
+      contentDescription = node.contentDescription?.toString(),
+      hint = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) node.hintText?.toString() else null,
+      viewId = node.viewIdResourceName,
+      bounds = "[${rect.left},${rect.top}][${rect.right},${rect.bottom}]",
+      centerX = rect.centerX(),
+      centerY = rect.centerY(),
+      clickable = node.isClickable,
+      editable = node.isEditable,
+      focusable = node.isFocusable,
+      focused = node.isFocused,
+      enabled = node.isEnabled,
+    )
   }
 
   private fun clickNodeOrAncestor(node: AccessibilityNodeInfo): Boolean {
@@ -151,34 +267,43 @@ class OpenClawAccessibilityService : AccessibilityService() {
     return false
   }
 
-  private fun findNodeByQuery(root: AccessibilityNodeInfo, query: String): AccessibilityNodeInfo? {
-    val q = query.lowercase()
-    val queue: ArrayDeque<AccessibilityNodeInfo> = ArrayDeque()
-    queue.add(root)
+  private fun findNodeInfoByQuery(root: AccessibilityNodeInfo, query: String): AccessibilityNodeInfo? {
+    val q = query.trim().lowercase()
+    if (q.isEmpty()) return null
 
+    val queue = ArrayDeque<AccessibilityNodeInfo>()
+    queue.add(root)
+    var best: Pair<Int, AccessibilityNodeInfo>? = null
     while (queue.isNotEmpty()) {
       val node = queue.removeFirst()
-      if (nodeMatchesQuery(node, q)) return node
+      val score = scoreNode(node, q)
+      if (score > 0 && (best == null || score > best!!.first)) {
+        best = score to node
+      }
       for (i in 0 until node.childCount) {
         val child = node.getChild(i) ?: continue
         queue.add(child)
       }
     }
-    return null
+    return best?.second
   }
 
-  private fun nodeMatchesQuery(node: AccessibilityNodeInfo, queryLower: String): Boolean {
-    fun hit(raw: CharSequence?): Boolean {
+  private fun scoreNode(node: AccessibilityNodeInfo, q: String): Int {
+    fun contains(raw: CharSequence?): Boolean {
       val s = raw?.toString()?.trim().orEmpty()
-      return s.isNotEmpty() && s.lowercase().contains(queryLower)
+      return s.isNotEmpty() && s.lowercase().contains(q)
     }
 
-    if (hit(node.text)) return true
-    if (hit(node.contentDescription)) return true
-    if (hit(node.viewIdResourceName)) return true
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && hit(node.hintText)) return true
+    var score = 0
+    if (contains(node.text)) score += 100
+    if (contains(node.contentDescription)) score += 80
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && contains(node.hintText)) score += 60
+    if (contains(node.viewIdResourceName)) score += 40
 
-    return false
+    if (node.isEditable) score += 15
+    if (node.isClickable) score += 10
+    if (node.isEnabled) score += 5
+    return score
   }
 
   private fun findFirstEditable(node: AccessibilityNodeInfo?): AccessibilityNodeInfo? {

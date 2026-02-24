@@ -194,6 +194,38 @@ class InvokeDispatcher(
           GatewaySession.InvokeResult.ok(res.okPayloadJson)
         }
       }
+      OpenClawControlCommand.UiSnapshot.rawValue -> {
+        val res = appControlHandler.handleUiSnapshot(paramsJson)
+        if (res.errorCode != null) {
+          GatewaySession.InvokeResult.error(code = res.errorCode, message = res.errorMessage ?: res.errorCode)
+        } else {
+          GatewaySession.InvokeResult.ok(res.okPayloadJson)
+        }
+      }
+      OpenClawControlCommand.UiFind.rawValue -> {
+        val res = appControlHandler.handleUiFind(paramsJson)
+        if (res.errorCode != null) {
+          GatewaySession.InvokeResult.error(code = res.errorCode, message = res.errorMessage ?: res.errorCode)
+        } else {
+          GatewaySession.InvokeResult.ok(res.okPayloadJson)
+        }
+      }
+      OpenClawControlCommand.UiClick.rawValue -> {
+        val res = appControlHandler.handleUiClick(paramsJson)
+        if (res.errorCode != null) {
+          GatewaySession.InvokeResult.error(code = res.errorCode, message = res.errorMessage ?: res.errorCode)
+        } else {
+          GatewaySession.InvokeResult.ok(res.okPayloadJson)
+        }
+      }
+      OpenClawControlCommand.UiWaitFor.rawValue -> {
+        val res = appControlHandler.handleUiWaitFor(paramsJson)
+        if (res.errorCode != null) {
+          GatewaySession.InvokeResult.error(code = res.errorCode, message = res.errorMessage ?: res.errorCode)
+        } else {
+          GatewaySession.InvokeResult.ok(res.okPayloadJson)
+        }
+      }
 
       // Debug commands
       "debug.ed25519" -> debugHandler.handleEd25519()

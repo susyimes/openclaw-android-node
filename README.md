@@ -48,12 +48,16 @@ sdk.dir=C:\\Users\\<you>\\AppData\\Local\\Android\\Sdk
 
 ## New node commands (Accessibility route)
 
-This repo now includes four accessibility-route invoke commands:
+This repo now includes accessibility-route invoke commands:
 
 - `app.launch` — launch an Android app by package name
 - `screen.tap` — tap a screen coordinate via Android AccessibilityService gesture API
-- `text.input` — set text into the currently focused editable field
-- `ime.paste` — paste provided text into the focused editable field
+- `text.input` — set text into the currently focused editable field (supports `targetQuery`)
+- `ime.paste` — paste provided text into the focused editable field (supports `targetQuery`)
+- `ui.snapshot` — dump a structured accessibility tree snapshot
+- `ui.find` — find best matching node by semantic query
+- `ui.click` — click node by `path` or semantic `query`
+- `ui.waitFor` — wait for query to appear/disappear
 
 ### Required setup on phone
 
@@ -82,4 +86,20 @@ This repo now declares a launcher-intent `<queries>` block in `AndroidManifest.x
 
 ```json
 {"text":"咖喱","targetQuery":"搜索"}
+```
+
+```json
+{"maxNodes":300}
+```
+
+```json
+{"query":"搜索"}
+```
+
+```json
+{"query":"搜索"}
+```
+
+```json
+{"query":"请输入关键词","timeoutMs":3000,"expectGone":false}
 ```

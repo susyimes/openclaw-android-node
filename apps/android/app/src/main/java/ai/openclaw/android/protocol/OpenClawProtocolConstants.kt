@@ -75,6 +75,10 @@ enum class OpenClawControlCommand(val rawValue: String) {
   ScreenTap("screen.tap"),
   TextInput("text.input"),
   ImePaste("ime.paste"),
+  UiSnapshot("ui.snapshot"),
+  UiFind("ui.find"),
+  UiClick("ui.click"),
+  UiWaitFor("ui.waitFor"),
   ;
 
   companion object {
