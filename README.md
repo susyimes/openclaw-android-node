@@ -79,3 +79,7 @@ This repo now declares a launcher-intent `<queries>` block in `AndroidManifest.x
 ```json
 {"text":"咖喱"}
 ```
+
+```json
+{"text":"咖喱","targetQuery":"搜索"}
+```

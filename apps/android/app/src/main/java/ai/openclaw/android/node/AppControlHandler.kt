@@ -96,6 +96,7 @@ class AppControlHandler(
   suspend fun handleTextInput(paramsJson: String?): Result {
     val payload = parseObject(paramsJson)
     val text = payload?.get("text").asStringOrNull()?.takeIf { it.isNotEmpty() }
+    val targetQuery = payload?.get("targetQuery").asStringOrNull()?.trim().orEmpty().ifEmpty { null }
 
     if (text == null) {
       return Result.error(
@@ -111,7 +112,7 @@ class AppControlHandler(
       )
     }
 
-    val ok = OpenClawAccessibilityService.setText(text)
+    val ok = OpenClawAccessibilityService.setText(text, targetQuery = targetQuery)
     if (!ok) {
       return Result.error(
         code = "TEXT_INPUT_FAILED",
@@ -123,6 +124,7 @@ class AppControlHandler(
       buildJsonObject {
         put("ok", JsonPrimitive(true))
         put("textLength", JsonPrimitive(text.length))
+        if (targetQuery != null) put("targetQuery", JsonPrimitive(targetQuery))
       }.toString(),
     )
   }
@@ -130,6 +132,7 @@ class AppControlHandler(
   suspend fun handleImePaste(paramsJson: String?): Result {
     val payload = parseObject(paramsJson)
     val text = payload?.get("text").asStringOrNull()?.takeIf { it.isNotEmpty() }
+    val targetQuery = payload?.get("targetQuery").asStringOrNull()?.trim().orEmpty().ifEmpty { null }
 
     if (text == null) {
       return Result.error(
@@ -145,7 +148,7 @@ class AppControlHandler(
       )
     }
 
-    val ok = OpenClawAccessibilityService.pasteText(text)
+    val ok = OpenClawAccessibilityService.pasteText(text, targetQuery = targetQuery)
     if (!ok) {
       return Result.error(
         code = "IME_PASTE_FAILED",
@@ -157,6 +160,7 @@ class AppControlHandler(
       buildJsonObject {
         put("ok", JsonPrimitive(true))
         put("textLength", JsonPrimitive(text.length))
+        if (targetQuery != null) put("targetQuery", JsonPrimitive(targetQuery))
       }.toString(),
     )
   }
