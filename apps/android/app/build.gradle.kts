@@ -7,6 +7,10 @@ plugins {
   id("org.jetbrains.kotlin.plugin.serialization")
 }
 
+val gitSha = providers.exec {
+  commandLine("git", "rev-parse", "--short", "HEAD")
+}.standardOutput.asText.get().trim().ifEmpty { "nogit" }
+
 android {
   namespace = "ai.openclaw.android"
   compileSdk = 36
@@ -22,7 +26,9 @@ android {
     minSdk = 31
     targetSdk = 36
     versionCode = 202602180
-    versionName = "2026.2.18"
+    versionName = "2026.2.18-$gitSha"
+    buildConfigField("String", "GIT_SHA", "\"$gitSha\"")
+    resValue("string", "app_name", "OpenClaw Node ($gitSha)")
     ndk {
       // Support all major ABIs — native libs are tiny (~47 KB per ABI)
       abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
