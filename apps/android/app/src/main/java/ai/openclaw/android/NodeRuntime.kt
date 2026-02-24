@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.SystemClock
+import android.util.Log
 import androidx.core.content.ContextCompat
 import ai.openclaw.android.chat.ChatController
 import ai.openclaw.android.chat.ChatMessage
@@ -353,6 +354,9 @@ class NodeRuntime(context: Context) {
   val gatewayToken: StateFlow<String> = prefs.gatewayToken
   fun setGatewayToken(value: String) = prefs.setGatewayToken(value)
   val lastDiscoveredStableId: StateFlow<String> = prefs.lastDiscoveredStableId
+
+  private val _invokeCommands = MutableStateFlow(connectionManager.buildInvokeCommands())
+  val invokeCommands: StateFlow<List<String>> = _invokeCommands.asStateFlow()
   val canvasDebugStatusEnabled: StateFlow<Boolean> = prefs.canvasDebugStatusEnabled
 
   private var didAutoConnect = false
@@ -486,10 +490,12 @@ class NodeRuntime(context: Context) {
 
   fun setCameraEnabled(value: Boolean) {
     prefs.setCameraEnabled(value)
+    refreshInvokeCommandsSnapshot()
   }
 
   fun setLocationMode(mode: LocationMode) {
     prefs.setLocationMode(mode)
+    refreshInvokeCommandsSnapshot()
   }
 
   fun setLocationPreciseEnabled(value: Boolean) {
@@ -531,10 +537,22 @@ class NodeRuntime(context: Context) {
 
   fun setVoiceWakeMode(mode: VoiceWakeMode) {
     prefs.setVoiceWakeMode(mode)
+    refreshInvokeCommandsSnapshot()
   }
 
   fun setTalkEnabled(value: Boolean) {
     prefs.setTalkEnabled(value)
+  }
+
+  private fun refreshInvokeCommandsSnapshot() {
+    _invokeCommands.value = connectionManager.buildInvokeCommands()
+  }
+
+  private fun logNodeCommandSnapshot(reason: String) {
+    val commands = connectionManager.buildInvokeCommands()
+    val caps = connectionManager.buildCapabilities()
+    _invokeCommands.value = commands
+    Log.i("NodeRuntime", "[$reason] node commands=${commands.joinToString(",")} caps=${caps.joinToString(",")} version=${connectionManager.resolvedVersionName()}")
   }
 
   fun refreshGatewayConnection() {
@@ -542,6 +560,7 @@ class NodeRuntime(context: Context) {
     val token = prefs.loadGatewayToken()
     val password = prefs.loadGatewayPassword()
     val tls = connectionManager.resolveTlsParams(endpoint)
+    logNodeCommandSnapshot("refreshGatewayConnection")
     operatorSession.connect(endpoint, token, password, connectionManager.buildOperatorConnectOptions(), tls)
     nodeSession.connect(endpoint, token, password, connectionManager.buildNodeConnectOptions(), tls)
     operatorSession.reconnect()
@@ -569,6 +588,7 @@ class NodeRuntime(context: Context) {
     updateStatus()
     val token = prefs.loadGatewayToken()
     val password = prefs.loadGatewayPassword()
+    logNodeCommandSnapshot("connect")
     operatorSession.connect(endpoint, token, password, connectionManager.buildOperatorConnectOptions(), tls)
     nodeSession.connect(endpoint, token, password, connectionManager.buildNodeConnectOptions(), tls)
   }

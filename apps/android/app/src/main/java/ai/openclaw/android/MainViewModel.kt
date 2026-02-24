@@ -54,6 +54,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
   val manualTls: StateFlow<Boolean> = runtime.manualTls
   val gatewayToken: StateFlow<String> = runtime.gatewayToken
   val canvasDebugStatusEnabled: StateFlow<Boolean> = runtime.canvasDebugStatusEnabled
+  val invokeCommands: StateFlow<List<String>> = runtime.invokeCommands
 
   val chatSessionKey: StateFlow<String> = runtime.chatSessionKey
   val chatSessionId: StateFlow<String?> = runtime.chatSessionId

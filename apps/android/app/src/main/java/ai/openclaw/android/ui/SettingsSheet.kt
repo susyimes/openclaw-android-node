@@ -86,6 +86,7 @@ fun SettingsSheet(viewModel: MainViewModel) {
   val manualTls by viewModel.manualTls.collectAsState()
   val gatewayToken by viewModel.gatewayToken.collectAsState()
   val canvasDebugStatusEnabled by viewModel.canvasDebugStatusEnabled.collectAsState()
+  val invokeCommands by viewModel.invokeCommands.collectAsState()
   val statusText by viewModel.statusText.collectAsState()
   val serverName by viewModel.serverName.collectAsState()
   val remoteAddress by viewModel.remoteAddress.collectAsState()
@@ -310,10 +311,14 @@ fun SettingsSheet(viewModel: MainViewModel) {
     item { Text("Version: $appVersion", color = MaterialTheme.colorScheme.onSurfaceVariant) }
     item { Text("Git SHA: ${BuildConfig.GIT_SHA}", color = MaterialTheme.colorScheme.onSurfaceVariant) }
 
-    item { Text("Build Feature Options", style = MaterialTheme.typography.titleSmall) }
-    item { Text("• app.launch", color = MaterialTheme.colorScheme.onSurfaceVariant) }
-    item { Text("• screen.tap", color = MaterialTheme.colorScheme.onSurfaceVariant) }
-    item { Text("• debug.ping.susu.20260224", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+    item { Text("Build Feature Options (Runtime)", style = MaterialTheme.typography.titleSmall) }
+    if (invokeCommands.isEmpty()) {
+      item { Text("(no invoke commands)", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+    } else {
+      items(items = invokeCommands, key = { it }) { cmd ->
+        Text("• $cmd", color = MaterialTheme.colorScheme.onSurfaceVariant)
+      }
+    }
 
     item { HorizontalDivider() }
 
