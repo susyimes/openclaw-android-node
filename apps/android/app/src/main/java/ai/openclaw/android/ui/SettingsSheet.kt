@@ -308,6 +308,12 @@ fun SettingsSheet(viewModel: MainViewModel) {
     item { Text("Instance ID: $instanceId", color = MaterialTheme.colorScheme.onSurfaceVariant) }
     item { Text("Device: $deviceModel", color = MaterialTheme.colorScheme.onSurfaceVariant) }
     item { Text("Version: $appVersion", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+    item { Text("Git SHA: ${BuildConfig.GIT_SHA}", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+
+    item { Text("Build Feature Options", style = MaterialTheme.typography.titleSmall) }
+    item { Text("• app.launch", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+    item { Text("• screen.tap", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+    item { Text("• debug.ping.susu.20260224", color = MaterialTheme.colorScheme.onSurfaceVariant) }
 
     item { HorizontalDivider() }
 
